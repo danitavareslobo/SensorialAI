@@ -21,7 +21,9 @@ import {
   ThumbsUp,
   PieChart,
   BarChart,
-  Radar
+  Radar,
+  FileText,
+  Download
 } from 'lucide-react';
 import larLogo from './assets/lar-logo.svg';
 
@@ -1057,6 +1059,329 @@ function App() {
     }, 4000);
   };
 
+  // Função para gerar relatório estruturado
+  const generateReport = () => {
+    if (!testData || !testData.tests.length) {
+      alert('Nenhum dado disponível para gerar o relatório.');
+      return;
+    }
+
+    const reportWindow = window.open('', '_blank');
+    const reportHTML = generateReportHTML();
+    
+    reportWindow.document.write(reportHTML);
+    reportWindow.document.close();
+    
+    // Aguardar o carregamento e imprimir
+    setTimeout(() => {
+      reportWindow.print();
+    }, 500);
+  };
+
+  // Função para gerar HTML do relatório
+  const generateReportHTML = () => {
+    const currentDate = new Date().toLocaleDateString('pt-BR');
+    const stats = testData.stats;
+    
+    // Calcular estatísticas adicionais
+    const totalTests = testData.tests.length;
+    const approvedTests = testData.tests.filter(t => t.status === 'approved').length;
+    const rejectedTests = totalTests - approvedTests;
+    const averageAccuracy = testData.tests.reduce((acc, test) => acc + test.accuracy, 0) / totalTests;
+    
+    // Agrupar feedback por categoria
+    const positiveComments = [];
+    const negativeComments = [];
+    const neutralComments = [];
+    
+    testData.tests.forEach(test => {
+      test.responses.forEach(response => {
+        const comment = {
+          test: test.product,
+          evaluator: response.name,
+          comment: response.comment,
+          credibility: response.credibilityScore
+        };
+        
+        if (response.sentiment === 'positive') {
+          positiveComments.push(comment);
+        } else if (response.sentiment === 'negative') {
+          negativeComments.push(comment);
+        } else {
+          neutralComments.push(comment);
+        }
+      });
+    });
+
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório de Análise Sensorial - SensorialAI</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            background: white;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .logo {
+            height: 50px;
+            margin-bottom: 10px;
+        }
+        h1 {
+            color: #3b82f6;
+            margin: 0;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #666;
+            margin: 5px 0 0 0;
+        }
+        .date {
+            color: #888;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .section {
+            margin: 30px 0;
+            page-break-inside: avoid;
+        }
+        h2 {
+            color: #1e40af;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h3 {
+            color: #374151;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .stat-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 12px 8px;
+            text-align: left;
+        }
+        th {
+            background: #f1f5f9;
+            font-weight: bold;
+            color: #374151;
+        }
+        tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        .approved { color: #059669; font-weight: bold; }
+        .rejected { color: #dc2626; font-weight: bold; }
+        .high-cred { color: #059669; }
+        .medium-cred { color: #d97706; }
+        .low-cred { color: #dc2626; }
+        .comment-box {
+            background: #f9fafb;
+            border-left: 4px solid #3b82f6;
+            padding: 10px 15px;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+        .evaluator {
+            font-weight: bold;
+            color: #374151;
+        }
+        .credibility {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        @media print {
+            body { font-size: 12px; }
+            .section { page-break-inside: avoid; }
+            h2 { page-break-after: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Relatório de Análise Sensorial</h1>
+        <p class="subtitle">Sistema SensorialAI - Análise Inteligente de Testes</p>
+        <p class="date">Gerado em: ${currentDate}</p>
+    </div>
+
+    <div class="section">
+        <h2>📊 Resumo Executivo</h2>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-number">${stats.total}</div>
+                <div class="stat-label">Total de Avaliadores</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">${totalTests}</div>
+                <div class="stat-label">Testes Realizados</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">${approvedTests}</div>
+                <div class="stat-label">Testes Aprovados</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">${averageAccuracy.toFixed(1)}%</div>
+                <div class="stat-label">Precisão Média</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">${stats.highCredibility}</div>
+                <div class="stat-label">Alta Credibilidade</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">${stats.mediumCredibility}</div>
+                <div class="stat-label">Média Credibilidade</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🧪 Detalhes dos Testes</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Produto</th>
+                    <th>Insumo Alterado</th>
+                    <th>Avaliadores</th>
+                    <th>Precisão</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${testData.tests.map(test => `
+                <tr>
+                    <td>${new Date(test.date).toLocaleDateString('pt-BR')}</td>
+                    <td>${test.product}</td>
+                    <td>${test.input}</td>
+                    <td>${test.evaluators}</td>
+                    <td>${test.accuracy.toFixed(1)}%</td>
+                    <td class="${test.status}">${test.status === 'approved' ? 'Aprovado' : 'Reprovado'}</td>
+                </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>💬 Análise de Comentários</h2>
+        
+        <h3>Comentários Positivos (${positiveComments.length})</h3>
+        ${positiveComments.slice(0, 5).map(comment => `
+        <div class="comment-box">
+            <div class="evaluator">${comment.evaluator} - ${comment.test}</div>
+            <div>"${comment.comment}"</div>
+            <div class="credibility">Credibilidade: ${comment.credibility}/100</div>
+        </div>
+        `).join('')}
+
+        <h3>Comentários Negativos (${negativeComments.length})</h3>
+        ${negativeComments.slice(0, 5).map(comment => `
+        <div class="comment-box">
+            <div class="evaluator">${comment.evaluator} - ${comment.test}</div>
+            <div>"${comment.comment}"</div>
+            <div class="credibility">Credibilidade: ${comment.credibility}/100</div>
+        </div>
+        `).join('')}
+    </div>
+
+    <div class="section">
+        <h2>📈 Distribuição de Credibilidade</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nível</th>
+                    <th>Quantidade</th>
+                    <th>Percentual</th>
+                    <th>Descrição</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="high-cred">Alta (≥80)</td>
+                    <td>${stats.highCredibility}</td>
+                    <td>${((stats.highCredibility / stats.total) * 100).toFixed(1)}%</td>
+                    <td>Comentários detalhados e identificação correta</td>
+                </tr>
+                <tr>
+                    <td class="medium-cred">Média (50-79)</td>
+                    <td>${stats.mediumCredibility}</td>
+                    <td>${((stats.mediumCredibility / stats.total) * 100).toFixed(1)}%</td>
+                    <td>Comentários gerais ou identificação parcial</td>
+                </tr>
+                <tr>
+                    <td class="low-cred">Baixa (<50)</td>
+                    <td>${stats.lowCredibility}</td>
+                    <td>${((stats.lowCredibility / stats.total) * 100).toFixed(1)}%</td>
+                    <td>Comentários vagos ou identificação incorreta</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>🎯 Recomendações</h2>
+        <ul>
+            <li><strong>Treinamento:</strong> ${stats.lowCredibility > stats.total * 0.3 ? 'Recomenda-se treinamento adicional para avaliadores com baixa credibilidade.' : 'Nível de treinamento adequado da equipe.'}</li>
+            <li><strong>Metodologia:</strong> ${averageAccuracy < 60 ? 'Considerar revisão da metodologia ou clareza das instruções.' : 'Metodologia demonstra resultados consistentes.'}</li>
+            <li><strong>Próximos passos:</strong> ${approvedTests > rejectedTests ? 'Continuar monitoramento da qualidade dos produtos aprovados.' : 'Investigar causas dos produtos reprovados para melhoria contínua.'}</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>📋 Metodologia</h2>
+        <p><strong>Análise de Credibilidade:</strong> Baseada na precisão da identificação (50 pontos) e qualidade do comentário (até 50 pontos adiciais).</p>
+        <p><strong>Análise de Sentimento:</strong> Classificação automática em positivo, neutro ou negativo, com aprendizado baseado em correções do usuário.</p>
+        <p><strong>Fonte dos Dados:</strong> ${testData.tests[0]?.responses?.length > 0 ? 'Dados carregados do arquivo Excel da análise triangular.' : 'Dados de exemplo para demonstração.'}</p>
+    </div>
+
+    <div style="text-align: center; margin-top: 50px; color: #6b7280; font-size: 12px;">
+        <p>Relatório gerado automaticamente pelo SensorialAI - ${currentDate}</p>
+    </div>
+</body>
+</html>
+    `;
+  };
+
   // Mostrar loading enquanto dados carregam
   if (loading) {
     return (
@@ -1092,6 +1417,16 @@ function App() {
                 <h1 className="hero-title">SensorialAI</h1>
                 <p className="hero-subtitle">Análise Inteligente de Testes Sensoriais</p>
               </div>
+            </div>
+            <div className="hero-actions">
+              <button 
+                onClick={generateReport}
+                className="report-button"
+                disabled={!testData || !testData.tests.length}
+              >
+                <FileText className="icon-sm" />
+                Gerar Relatório Estruturado
+              </button>
             </div>
           </div>
 
