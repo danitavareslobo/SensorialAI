@@ -288,6 +288,17 @@ function App() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResults, setAnalysisResults] = useState(null);
   const [progress, setProgress] = useState(0);
+  const [sentimentCorrections, setSentimentCorrections] = useState(() => {
+    // Carregar correções salvas do localStorage
+    const saved = localStorage.getItem('sensorialAI_corrections');
+    return saved ? JSON.parse(saved) : {};
+  });
+  const [showCorrectionFeedback, setShowCorrectionFeedback] = useState(null);
+
+  // Salvar correções no localStorage sempre que houver mudanças
+  React.useEffect(() => {
+    localStorage.setItem('sensorialAI_corrections', JSON.stringify(sentimentCorrections));
+  }, [sentimentCorrections]);
 
   const getStatusColor = (status) => {
     const colors = {
@@ -387,6 +398,97 @@ function App() {
       neutral: <MessageSquare className="icon-sm" />
     };
     return icons[sentiment];
+  };
+
+  const correctSentiment = (testId, responseIndex, newSentiment, originalComment) => {
+    const correctionKey = `${testId}-${responseIndex}`;
+    
+    // Salvar a correção para aprendizado futuro
+    setSentimentCorrections(prev => ({
+      ...prev,
+      [correctionKey]: {
+        originalSentiment: selectedTest.responses[responseIndex].sentiment,
+        correctedSentiment: newSentiment,
+        comment: originalComment,
+        timestamp: new Date().toISOString(),
+        testId: testId,
+        responseIndex: responseIndex
+      }
+    }));
+
+    // Atualizar o teste selecionado com a correção
+    setSelectedTest(prev => ({
+      ...prev,
+      responses: prev.responses.map((response, index) => 
+        index === responseIndex 
+          ? { ...response, sentiment: newSentiment, correctedByUser: true }
+          : response
+      )
+    }));
+
+    // Mostrar feedback de sucesso
+    setShowCorrectionFeedback(`Classificação alterada para ${newSentiment === 'positive' ? 'Positivo' : newSentiment === 'negative' ? 'Negativo' : 'Neutro'}!`);
+    setTimeout(() => setShowCorrectionFeedback(null), 3000);
+  };
+
+  const getCurrentSentiment = (testId, responseIndex, originalSentiment) => {
+    const correctionKey = `${testId}-${responseIndex}`;
+    return sentimentCorrections[correctionKey]?.correctedSentiment || originalSentiment;
+  };
+
+  const learnFromCorrections = (comment) => {
+    // Buscar padrões nas correções para melhorar classificações futuras
+    const corrections = Object.values(sentimentCorrections);
+    const similarCorrections = corrections.filter(correction => {
+      const similarity = calculateSimilarity(comment.toLowerCase(), correction.comment.toLowerCase());
+      return similarity > 0.3; // 30% de similaridade
+    });
+
+    if (similarCorrections.length > 0) {
+      // Retornar o sentimento mais frequente nas correções similares
+      const sentimentCounts = { positive: 0, negative: 0, neutral: 0 };
+      similarCorrections.forEach(correction => {
+        sentimentCounts[correction.correctedSentiment]++;
+      });
+      
+      const mostFrequentSentiment = Object.keys(sentimentCounts).reduce((a, b) => 
+        sentimentCounts[a] > sentimentCounts[b] ? a : b
+      );
+      
+      return mostFrequentSentiment;
+    }
+    
+    return null; // Nenhum aprendizado disponível
+  };
+
+  const calculateSimilarity = (str1, str2) => {
+    // Algoritmo simples de similaridade baseado em palavras comuns
+    const words1 = str1.split(/\s+/);
+    const words2 = str2.split(/\s+/);
+    const commonWords = words1.filter(word => words2.includes(word));
+    return commonWords.length / Math.max(words1.length, words2.length);
+  };
+
+  const improvedSentimentAnalysis = (comment) => {
+    // Primeiro, tentar aprender das correções anteriores
+    const learnedSentiment = learnFromCorrections(comment);
+    if (learnedSentiment) {
+      return learnedSentiment;
+    }
+
+    // Se não há aprendizado, usar classificação original
+    const lowercaseComment = comment.toLowerCase();
+    
+    // Palavras positivas expandidas com base no aprendizado
+    const positiveWords = ['saboroso', 'gostei', 'ótimo', 'bom', 'agradável', 'perfeita', 'equilibrado', 'natural', 'compraria', 'fácil', 'óbvia', 'evidente', 'bem definida'];
+    const negativeWords = ['não gostei', 'ruim', 'artificial', 'forte demais', 'enjoativo', 'mascarou', 'cru', 'não consegui', 'não notei'];
+    
+    const positiveCount = positiveWords.filter(word => lowercaseComment.includes(word)).length;
+    const negativeCount = negativeWords.filter(word => lowercaseComment.includes(word)).length;
+    
+    if (positiveCount > negativeCount) return 'positive';
+    if (negativeCount > positiveCount) return 'negative';
+    return 'neutral';
   };
 
   const classifyApprovalReasons = (responses, testType, testStatus) => {
@@ -926,6 +1028,14 @@ function App() {
             <h1 className="analysis-title">Análise Detalhada - {selectedTest.id}</h1>
           </div>
 
+          {/* Feedback de Correção */}
+          {showCorrectionFeedback && (
+            <div className="correction-feedback">
+              <CheckCircle className="icon-sm" />
+              {showCorrectionFeedback}
+            </div>
+          )}
+
           <div className="analysis-content">
             {/* Seção 1: Informações do Teste */}
             <div className="test-info-section">
@@ -980,17 +1090,48 @@ function App() {
                           <span className="evaluator-name">{response.name}</span>
                         </div>
                         <div className="comment-badges">
-                          <span className={`identification-badge ${response.identified ? 'identified-yes' : 'identified-no'}`}>
-                            {response.identified ? <CheckCircle className="icon-xs" /> : <XCircle className="icon-xs" />}
-                            {response.identified ? 'Identificou' : 'Não Identificou'}
-                          </span>
-                          <span className={`credibility-badge ${getCredibilityLevel(response.credibilityScore).class}`}>
-                            {getCredibilityLevel(response.credibilityScore).level}
-                          </span>
-                          <span className={`sentiment-badge ${getSentimentColor(response.sentiment)}`}>
-                            {getSentimentIcon(response.sentiment)}
-                            {response.sentiment === 'positive' ? 'Positivo' : response.sentiment === 'negative' ? 'Negativo' : 'Neutro'}
-                          </span>
+                          {/* Linha única: Identificação, Credibilidade e Sentimento */}
+                          <div className="badges-row">
+                            <span className={`identification-badge ${response.identified ? 'identified-yes' : 'identified-no'}`}>
+                              {response.identified ? <CheckCircle className="icon-xs" /> : <XCircle className="icon-xs" />}
+                              {response.identified ? 'Identificou' : 'Não Identificou'}
+                            </span>
+                            <span className={`credibility-badge ${getCredibilityLevel(response.credibilityScore).class}`}>
+                              {getCredibilityLevel(response.credibilityScore).level}
+                            </span>
+                            <span className={`sentiment-badge ${getSentimentColor(getCurrentSentiment(selectedTest.id, index, response.sentiment))}`}>
+                              {getSentimentIcon(getCurrentSentiment(selectedTest.id, index, response.sentiment))}
+                              {getCurrentSentiment(selectedTest.id, index, response.sentiment) === 'positive' ? 'Positivo' : 
+                               getCurrentSentiment(selectedTest.id, index, response.sentiment) === 'negative' ? 'Negativo' : 'Neutro'}
+                              {response.correctedByUser && <span className="corrected-indicator">✓</span>}
+                            </span>
+                          </div>
+                          
+                          {/* Linha de botões de correção */}
+                          <div className="sentiment-correction-buttons">
+                            <span className="correction-label"></span>
+                            <button 
+                              className={`sentiment-btn positive ${getCurrentSentiment(selectedTest.id, index, response.sentiment) === 'positive' ? 'active' : ''}`}
+                              onClick={() => correctSentiment(selectedTest.id, index, 'positive', response.comment)}
+                              title="Classificar como Positivo"
+                            >
+                              <ThumbsUp className="icon-xs" />
+                            </button>
+                            <button 
+                              className={`sentiment-btn neutral ${getCurrentSentiment(selectedTest.id, index, response.sentiment) === 'neutral' ? 'active' : ''}`}
+                              onClick={() => correctSentiment(selectedTest.id, index, 'neutral', response.comment)}
+                              title="Classificar como Neutro"
+                            >
+                              <MessageSquare className="icon-xs" />
+                            </button>
+                            <button 
+                              className={`sentiment-btn negative ${getCurrentSentiment(selectedTest.id, index, response.sentiment) === 'negative' ? 'active' : ''}`}
+                              onClick={() => correctSentiment(selectedTest.id, index, 'negative', response.comment)}
+                              title="Classificar como Negativo"
+                            >
+                              <TrendingDown className="icon-xs" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                       <div className="comment-text">"{response.comment}"</div>
@@ -1198,6 +1339,45 @@ function App() {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Correções de Sentimento */}
+                {Object.keys(sentimentCorrections).length > 0 && (
+                  <div className="section-card">
+                    <h2 className="section-heading">
+                      <Brain className="icon-md" />
+                      Aprendizado da IA ({Object.keys(sentimentCorrections).length} correções)
+                    </h2>
+                    <div className="corrections-summary">
+                      <p className="corrections-description">
+                        A IA está aprendendo com suas correções para melhorar futuras classificações.
+                      </p>
+                      <div className="corrections-grid">
+                        {Object.values(sentimentCorrections)
+                          .filter(correction => correction.testId === selectedTest.id)
+                          .map((correction, index) => (
+                          <div key={index} className="correction-item">
+                            <div className="correction-change">
+                              <span className={`sentiment-old ${correction.originalSentiment}`}>
+                                {correction.originalSentiment === 'positive' ? 'Positivo' : 
+                                 correction.originalSentiment === 'negative' ? 'Negativo' : 'Neutro'}
+                              </span>
+                              →
+                              <span className={`sentiment-new ${correction.correctedSentiment}`}>
+                                {correction.correctedSentiment === 'positive' ? 'Positivo' : 
+                                 correction.correctedSentiment === 'negative' ? 'Negativo' : 'Neutro'}
+                              </span>
+                            </div>
+                            <div className="correction-comment">"{correction.comment}"</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="learning-status">
+                        <Sparkles className="icon-sm" />
+                        <span>A IA incorporará essas correções em análises futuras</span>
+                      </div>
                     </div>
                   </div>
                 )}
