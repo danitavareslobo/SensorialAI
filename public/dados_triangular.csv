@@ -1,0 +1,37 @@
+ID_Teste,Produto,Insumo_Alterado,ID_Provador,Amostras_Apresentadas,Amostra_Diferente_Correta,Amostra_Julgada_Diferente,Resultado,Atributo_Foco,Comentário_Provador
+1,Empanado de Frango,Amido (Forn. X vs Y),101,"521, 359, 843",521,521,1,Crocância,A amostra 521 estava muito mais dura e com um som de quebra mais alto. Diferença nítida.
+1,Empanado de Frango,Amido (Forn. X vs Y),102,"843, 521, 359",521,521,1,Crocância,Uma das amostras tinha uma textura mais porosa e quebradiça. Fácil de identificar.
+1,Empanado de Frango,Amido (Forn. X vs Y),103,"843, 359, 521",521,843,0,Crocância,Todas as amostras pareciam iguais. Chutei a amostra 843.
+1,Empanado de Frango,Amido (Forn. X vs Y),104,"521, 359, 843",521,843,0,Crocância,"Não senti diferença na boca, mas visualmente a 843 parecia ter uma cor mais escura."
+1,Empanado de Frango,Amido (Forn. X vs Y),105,"843, 521, 359",521,521,1,Crocância,A amostra 521 era mais crocante e aerada que as outras duas.
+1,Empanado de Frango,Amido (Forn. X vs Y),106,"843, 359, 521",521,521,1,Crocância,Diferença clara de som ao morder. A 521 se destacou.
+1,Empanado de Frango,Amido (Forn. X vs Y),107,"521, 359, 843",521,521,1,Crocância,"A textura da 521 era menos densa, achei mais leve ao mastigar."
+1,Empanado de Frango,Amido (Forn. X vs Y),108,"843, 521, 359",521,359,0,Crocância,As amostras tinham a mesma cor e textura. Não senti diferença.
+1,Empanado de Frango,Amido (Forn. X vs Y),109,"843, 359, 521",521,521,1,Crocância,A 521 estava muito mais crocante e o empanamento parecia mais solto.
+1,Empanado de Frango,Amido (Forn. X vs Y),110,"521, 359, 843",521,521,1,Crocância,Notei uma fritura mais uniforme na 521. As outras pareciam um pouco passadas.
+1,Empanado de Frango,Amido (Forn. X vs Y),111,"843, 521, 359",521,521,1,Crocância,A 521 se desfazia mais facilmente ao morder.
+1,Empanado de Frango,Amido (Forn. X vs Y),112,"843, 359, 521",521,521,1,Crocância,Senti uma diferença clara na textura. A 521 era a mais preferível.
+2,Linguiça de Frango,Pimenta (Lote A vs Lote B),101,"771, 451, 930",771,930,0,Sabor Picante,Todas pareciam ter o mesmo nível de picância.
+2,Linguiça de Frango,Pimenta (Lote A vs Lote B),102,"930, 771, 451",771,451,0,Sabor Picante,"A diferença era muito sutil, não consigo garantir que acertei."
+2,Linguiça de Frango,Pimenta (Lote A vs Lote B),103,"930, 451, 771",771,930,0,Sabor Picante,Nenhuma das três estava picante.
+2,Linguiça de Frango,Pimenta (Lote A vs Lote B),104,"771, 451, 930",771,930,0,Sabor Picante,"Eu acho que a 771 estava ligeiramente mais salgada, mas não mais picante."
+2,Linguiça de Frango,Pimenta (Lote A vs Lote B),105,"930, 771, 451",771,771,1,Sabor Picante,A 771 tinha um pós-gosto mais ardido na garganta.
+2,Linguiça de Frango,Pimenta (Lote A vs Lote B),106,"930, 451, 771",771,451,0,Sabor Picante,Sem diferenças perceptíveis. Escolhi aleatoriamente.
+2,Linguiça de Frango,Pimenta (Lote A vs Lote B),107,"771, 451, 930",771,930,0,Sabor Picante,"Apenas um chute, não senti nada."
+2,Linguiça de Frango,Pimenta (Lote A vs Lote B),108,"451, 771, 930",771,771,1,Sabor Picante,"A amostra 771 tinha um sabor vegetal diferente, além da picância."
+2,Linguiça de Frango,Pimenta (Lote A vs Lote B),109,"930, 451, 771",771,930,0,Sabor Picante,Todas as amostras estavam muito parecidas.
+2,Linguiça de Frango,Pimenta (Lote A vs Lote B),110,"771, 451, 930",771,771,1,Sabor Picante,A intensidade da ardência da 771 era maior no ápice.
+2,Linguiça de Frango,Pimenta (Lote A vs Lote B),111,"451, 771, 930",771,451,0,Sabor Picante,Nenhum comentário.
+2,Linguiça de Frango,Pimenta (Lote A vs Lote B),112,"930, 451, 771",771,771,1,Sabor Picante,A 771 deixou um calor na boca por mais tempo.
+3,Peito Cozido de Frango,Salmoura (Aditivo C vs D),101,"100, 300, 200",100,200,0,Suculência,"A diferença foi na fibrosidade, não na umidade. Chutei errado."
+3,Peito Cozido de Frango,Salmoura (Aditivo C vs D),102,"200, 100, 300",100,100,1,Suculência,A 100 parecia mais úmida e macia ao desfiar.
+3,Peito Cozido de Frango,Salmoura (Aditivo C vs D),103,"200, 300, 100",100,300,0,Suculência,Sem diferenças claras de suculência.
+3,Peito Cozido de Frango,Salmoura (Aditivo C vs D),104,"100, 300, 200",100,100,1,Suculência,A 100 estava visivelmente mais brilhante e soltava mais água.
+3,Peito Cozido de Frango,Salmoura (Aditivo C vs D),105,"200, 100, 300",100,100,1,Suculência,A textura de mastigação da 100 foi mais suave.
+3,Peito Cozido de Frango,Salmoura (Aditivo C vs D),106,"200, 300, 100",100,200,0,Suculência,Nenhuma diferença de umidade.
+3,Peito Cozido de Frango,Salmoura (Aditivo C vs D),107,"100, 300, 200",100,300,0,Suculência,Amostras 100 e 200 parecem iguais.
+3,Peito Cozido de Frango,Salmoura (Aditivo C vs D),108,"300, 100, 200",100,200,0,Suculência,"A diferença que notei foi em relação ao sal, e não à umidade."
+3,Peito Cozido de Frango,Salmoura (Aditivo C vs D),109,"200, 300, 100",100,100,1,Suculência,A 100 estava menos seca no paladar.
+3,Peito Cozido de Frango,Salmoura (Aditivo C vs D),110,"100, 300, 200",100,100,1,Suculência,A fibra parecia mais intacta na 100.
+3,Peito Cozido de Frango,Salmoura (Aditivo C vs D),111,"300, 100, 200",100,300,0,Suculência,Difícil de discernir.
+3,Peito Cozido de Frango,Salmoura (Aditivo C vs D),112,"200, 300, 100",100,100,1,Suculência,A 100 tinha uma sensação de boca mais agradável (não tão esponjosa).

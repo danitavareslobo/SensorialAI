@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   BarChart3, 
   CheckCircle, 
@@ -23,6 +23,7 @@ import {
   BarChart,
   Radar
 } from 'lucide-react';
+import larLogo from './assets/lar-logo.svg';
 
 // Dados mockados baseados na estrutura MyLims e análise de comentários para insights
 const mockData = {
@@ -294,11 +295,158 @@ function App() {
     return saved ? JSON.parse(saved) : {};
   });
   const [showCorrectionFeedback, setShowCorrectionFeedback] = useState(null);
+  const [testData, setTestData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Salvar correções no localStorage sempre que houver mudanças
   React.useEffect(() => {
     localStorage.setItem('sensorialAI_corrections', JSON.stringify(sentimentCorrections));
   }, [sentimentCorrections]);
+
+  // Carregar dados do CSV
+  useEffect(() => {
+    const loadTestData = async () => {
+      try {
+        const response = await fetch('/dados_triangular.csv');
+        const csvText = await response.text();
+        const parsedData = parseCSVData(csvText);
+        setTestData(parsedData);
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        // Fallback para dados mock se CSV não estiver disponível
+        setTestData(mockData);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTestData();
+  }, []);
+
+  // Função para processar dados do CSV
+  const parseCSVData = (csvText) => {
+    const lines = csvText.split('\n');
+    const headers = lines[0].split(',');
+    
+    const rawData = [];
+    for (let i = 1; i < lines.length; i++) {
+      if (lines[i].trim()) {
+        const values = parseCSVLine(lines[i]);
+        const obj = {};
+        headers.forEach((header, index) => {
+          obj[header.trim()] = values[index];
+        });
+        rawData.push(obj);
+      }
+    }
+
+    return transformToTestFormat(rawData);
+  };
+
+  // Função auxiliar para parsear linhas CSV considerando vírgulas em strings
+  const parseCSVLine = (line) => {
+    const values = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        values.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    values.push(current.trim());
+    return values;
+  };
+
+  // Transformar dados CSV no formato esperado pelo Dashboard
+  const transformToTestFormat = (rawData) => {
+    const testsMap = new Map();
+    let stats = {
+      total: 0,
+      highCredibility: 0,
+      mediumCredibility: 0,
+      lowCredibility: 0,
+      testsCompleted: 0
+    };
+
+    rawData.forEach(row => {
+      const testId = row.ID_Teste;
+      
+      if (!testsMap.has(testId)) {
+        testsMap.set(testId, {
+          id: `TEST${testId.toString().padStart(3, '0')}`,
+          date: new Date().toISOString().split('T')[0], // Data atual, pode ser ajustada
+          input: row.Insumo_Alterado || "Não especificado",
+          product: row.Produto || "Produto do teste",
+          status: "completed",
+          type: "Triangular",
+          evaluators: 0,
+          correctIdentifications: 0,
+          accuracy: 0,
+          statisticalDecision: "Conforme análise dos dados",
+          responses: []
+        });
+      }
+
+      const test = testsMap.get(testId);
+      const identified = parseInt(row.Resultado) === 1;
+      const comment = row['Comentário_Provador'] || row.Comentário_Provador || "Sem comentário";
+      
+      // Calcular score de credibilidade baseado no comentário
+      const credibilityScore = calculateCredibilityScore(identified, comment);
+      
+      // Análise de sentimento do comentário
+      const sentiment = improvedSentimentAnalysis(comment);
+
+      const response = {
+        name: `Avaliador ${row.ID_Provador}`,
+        comment: comment,
+        identified: identified,
+        credibilityScore: credibilityScore,
+        sentiment: sentiment
+      };
+
+      test.responses.push(response);
+      test.evaluators++;
+      
+      if (identified) {
+        test.correctIdentifications++;
+      }
+
+      // Atualizar estatísticas globais
+      stats.total++;
+      if (credibilityScore >= 80) {
+        stats.highCredibility++;
+      } else if (credibilityScore >= 50) {
+        stats.mediumCredibility++;
+      } else {
+        stats.lowCredibility++;
+      }
+    });
+
+    // Calcular accuracy para cada teste
+    testsMap.forEach(test => {
+      test.accuracy = test.evaluators > 0 ? (test.correctIdentifications / test.evaluators) * 100 : 0;
+      // Determinar status baseado na accuracy
+      test.status = test.accuracy >= 50 ? "approved" : "rejected";
+      test.statisticalDecision = test.accuracy >= 50 
+        ? `Aprovado (${test.accuracy.toFixed(1)}% de acertos)` 
+        : `Reprovado (${test.accuracy.toFixed(1)}% de acertos)`;
+    });
+
+    stats.testsCompleted = testsMap.size;
+
+    return {
+      stats,
+      tests: Array.from(testsMap.values())
+    };
+  };
 
   const getStatusColor = (status) => {
     const colors = {
@@ -909,14 +1057,42 @@ function App() {
     }, 4000);
   };
 
+  // Mostrar loading enquanto dados carregam
+  if (loading) {
+    return (
+      <div className="app">
+        <div className="dashboard">
+          <div className="hero-section">
+            <div className="hero-header">
+              <img src={larLogo} alt="LAR Logo" className="hero-logo" />
+              <div className="hero-text">
+                <h1 className="hero-title">SensorialAI</h1>
+                <p className="hero-subtitle">Carregando dados...</p>
+              </div>
+            </div>
+          </div>
+          <div className="loading-container">
+            <Clock className="icon-lg animate-spin" />
+            <p>Carregando dados dos testes sensoriais...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       {!selectedTest ? (
         <div className="dashboard">
           {/* Hero Section */}
           <div className="hero-section">
-            <h1 className="hero-title">SensorialAI</h1>
-            <p className="hero-subtitle">Análise Inteligente de Testes Sensoriais</p>
+            <div className="hero-header">
+              <img src={larLogo} alt="LAR Logo" className="hero-logo" />
+              <div className="hero-text">
+                <h1 className="hero-title">SensorialAI</h1>
+                <p className="hero-subtitle">Análise Inteligente de Testes Sensoriais</p>
+              </div>
+            </div>
           </div>
 
           {/* Stats Cards */}
@@ -926,7 +1102,7 @@ function App() {
                 <Users className="icon-md" />
               </div>
               <div className="stat-content">
-                <div className="stat-number">{mockData.stats.total}</div>
+                <div className="stat-number">{testData?.stats?.total || 0}</div>
                 <div className="stat-label">Total Avaliadores</div>
               </div>
             </div>
@@ -936,7 +1112,7 @@ function App() {
                 <TrendingUp className="icon-md" />
               </div>
               <div className="stat-content">
-                <div className="stat-number">{mockData.stats.highCredibility}</div>
+                <div className="stat-number">{testData?.stats?.highCredibility || 0}</div>
                 <div className="stat-label">Alta Credibilidade</div>
               </div>
             </div>
@@ -946,7 +1122,7 @@ function App() {
                 <BarChart3 className="icon-md" />
               </div>
               <div className="stat-content">
-                <div className="stat-number">{mockData.stats.mediumCredibility}</div>
+                <div className="stat-number">{testData?.stats?.mediumCredibility || 0}</div>
                 <div className="stat-label">Média Credibilidade</div>
               </div>
             </div>
@@ -956,7 +1132,7 @@ function App() {
                 <Activity className="icon-md" />
               </div>
               <div className="stat-content">
-                <div className="stat-number">{mockData.stats.testsCompleted}</div>
+                <div className="stat-number">{testData?.stats?.testsCompleted || 0}</div>
                 <div className="stat-label">Testes Realizados</div>
               </div>
             </div>
@@ -970,7 +1146,6 @@ function App() {
                 <thead>
                   <tr>
                     <th>Data</th>
-                    <th>Fornecedor</th>
                     <th>Insumo</th>
                     <th>Produto</th>
                     <th>Avaliadores</th>
@@ -980,10 +1155,9 @@ function App() {
                   </tr>
                 </thead>
                 <tbody>
-                  {mockData.tests.map((test) => (
+                  {(testData?.tests || []).map((test) => (
                     <tr key={test.id} className="table-row">
                       <td>{new Date(test.date).toLocaleDateString('pt-BR')}</td>
-                      <td>{test.supplier}</td>
                       <td>{test.input}</td>
                       <td>{test.product}</td>
                       <td>{test.evaluators}</td>
@@ -1042,13 +1216,6 @@ function App() {
               <div className="section-card">
                 <h2 className="section-heading">Informações do Teste</h2>
                 <div className="info-grid">
-                  <div className="info-item">
-                    <Building className="icon-sm" />
-                    <div>
-                      <span className="info-label">Fornecedor</span>
-                      <span className="info-value">{selectedTest.supplier}</span>
-                    </div>
-                  </div>
                   <div className="info-item">
                     <Package className="icon-sm" />
                     <div>
