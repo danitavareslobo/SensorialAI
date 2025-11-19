@@ -24,14 +24,14 @@ import {
   Radar
 } from 'lucide-react';
 
-// Dados mockados baseados na análise real dos PDFs
+// Dados mockados baseados na estrutura MyLims e análise de comentários para insights
 const mockData = {
   stats: {
-    total: 18, // Total de avaliadores analisados
-    highCredibility: 4, // Heloisa, Silene, Jamerson, Italo
-    mediumCredibility: 4, // Clemens, Mariana, Amanda, Renata
-    lowCredibility: 3, // Laís, Carlos, Maiara
-    testsCompleted: 60
+    total: 75, // Total de avaliadores em todos os testes
+    highCredibility: 18, // Avaliadores com alta credibilidade (≥80)
+    mediumCredibility: 25, // Avaliadores com credibilidade média (50-79)
+    lowCredibility: 12, // Avaliadores com baixa credibilidade (<50)
+    testsCompleted: 4 // Total de testes realizados
   },
   tests: [
     {
@@ -40,75 +40,245 @@ const mockData = {
       supplier: "Nutrimental",
       input: "Corante Natural",
       product: "Linguiça de Frango",
-      status: "completed",
+      status: "approved", // Decisão estatística já definida
       type: "Triangular",
-      evaluators: 18,
-      correctIdentifications: 15,
-      accuracy: 83.3,
+      evaluators: 12,
+      correctIdentifications: 7,
+      accuracy: 58.3,
+      statisticalDecision: "Aprovado (p < 0.05)", // Resultado do método padrão estatístico
       responses: [
+        { 
+          name: "Laís Soares", 
+          comment: "não evidenciado diferença significativa",
+          identified: false,
+          credibilityScore: 15, // Calculado: 0 + 15 (vague)
+          sentiment: "neutral"
+        },
         { 
           name: "Heloisa", 
           comment: "Diferença praticamente imperceptível",
           identified: true,
-          credibilityScore: 85,
+          credibilityScore: 65, // Calculado: 50 + 15 (vague - imperceptível)
           sentiment: "neutral"
         },
         { 
           name: "Silene", 
           comment: "Amostra apresenta cor mais dourada",
           identified: true,
-          credibilityScore: 90,
-          sentiment: "neutral"
+          credibilityScore: 100, // Calculado: 50 + 50 (specific - dourada)
+          sentiment: "positive"
         },
         { 
           name: "Jamerson", 
           comment: "Aparentemente está mais 'cru'",
           identified: true,
-          credibilityScore: 88,
+          credibilityScore: 100, // Calculado: 50 + 50 (specific - cru)
           sentiment: "negative"
         },
         { 
           name: "Italo", 
           comment: "Ligeiramente mais rosada",
           identified: true,
-          credibilityScore: 85,
+          credibilityScore: 100, // Calculado: 50 + 50 (specific - rosada)
           sentiment: "neutral"
         },
         { 
           name: "Mariana", 
-          comment: "Bem sutil, mais é mais escura",
+          comment: "Bem sutil, mas é mais escura",
           identified: true,
-          credibilityScore: 75,
+          credibilityScore: 100, // Calculado: 50 + 50 (specific - escura)
           sentiment: "neutral"
         },
         { 
-          name: "Laís", 
-          comment: "Não evidenciado diferença significativa",
+          name: "Amanda", 
+          comment: "As amostras pareciam muito semelhante",
           identified: false,
-          credibilityScore: 45,
+          credibilityScore: 30, // Calculado: 0 + 30 (general - semelhante)
+          sentiment: "neutral"
+        },
+        { 
+          name: "Carlos Anderson", 
+          comment: "As amostras 829, 130 e 223 diferem das demais",
+          identified: true,
+          credibilityScore: 80, // Calculado: 50 + 30 (general - diferem)
+          sentiment: "positive"
+        },
+        { 
+          name: "Renata", 
+          comment: "Nas amostras diferentes a cor estava um pouco mais escura que as demais",
+          identified: true,
+          credibilityScore: 100, // Calculado: 50 + 50 (specific - escura)
+          sentiment: "neutral"
+        },
+        { 
+          name: "Maiara", 
+          comment: "Não notei diferença na cor da massa",
+          identified: false,
+          credibilityScore: 15, // Calculado: 0 + 15 (vague - não notei)
+          sentiment: "negative"
+        },
+        { 
+          name: "Carlos Felipe", 
+          comment: "Muito parecidas, não percebi diferenciação. Achei a 829, 130 e 223 levemente mais claros",
+          identified: false,
+          credibilityScore: 30, // Calculado: 0 + 30 (general - parecidas, levemente, claros)
+          sentiment: "neutral"
+        },
+        { 
+          name: "Clemerson Elis", 
+          comment: "As amostras circuladas apresentam tom mais claro",
+          identified: true,
+          credibilityScore: 100, // Calculado: 50 + 50 (specific - tom, claro)
           sentiment: "neutral"
         }
       ]
     },
     {
       id: "TEST002", 
-      date: "2025-10-20",
-      supplier: "FornecedorB", 
-      input: "Tempero Especial",
-      product: "Batata Frita", 
-      status: "approved",
-      evaluators: 12,
-      accuracy: 75.0
+      date: "2025-11-10",
+      supplier: "FornecedorA", 
+      input: "Açúcar Orgânico",
+      product: "Cookies Integrais", 
+      status: "approved", // Decisão estatística já definida
+      type: "Aceitação",
+      evaluators: 25,
+      averageScore: 7.8,
+      statisticalDecision: "Aprovado (média > 6.0)",
+      responses: [
+        { 
+          name: "Ana Silva", 
+          comment: "Sabor doce equilibrado, textura crocante perfeita",
+          score: 8.5,
+          credibilityScore: 88,
+          sentiment: "positive"
+        },
+        { 
+          name: "João Santos", 
+          comment: "Gosto muito da crocância, açúcar não fica enjoativo",
+          score: 8.0,
+          credibilityScore: 82,
+          sentiment: "positive"
+        },
+        { 
+          name: "Maria Costa", 
+          comment: "Textura boa mas achei meio sem graça no sabor",
+          score: 6.5,
+          credibilityScore: 75,
+          sentiment: "neutral"
+        },
+        { 
+          name: "Pedro Lima", 
+          comment: "Muito saboroso, compraria novamente",
+          score: 9.0,
+          credibilityScore: 90,
+          sentiment: "positive"
+        },
+        { 
+          name: "Carla Mendes", 
+          comment: "Açúcar orgânico dá um gosto diferente, mais natural",
+          score: 7.5,
+          credibilityScore: 85,
+          sentiment: "positive"
+        },
+        { 
+          name: "Rafael Silva", 
+          comment: "Não gostei, ficou muito doce pra mim",
+          score: 4.0,
+          credibilityScore: 70,
+          sentiment: "negative"
+        }
+      ]
     },
     {
       id: "TEST003",
-      date: "2025-10-18", 
+      date: "2025-11-08", 
       supplier: "FornecedorC",
-      input: "Óleo de Fritura", 
-      product: "Frango Empanado",
-      status: "rejected",
-      evaluators: 15,
-      accuracy: 60.0
+      input: "Tempero Especial", 
+      product: "Batata Frita Temperada",
+      status: "rejected", // Decisão estatística já definida
+      type: "Preferência",
+      evaluators: 30,
+      preferredSample: "Amostra B (Padrão)",
+      statisticalDecision: "Reprovado (preferência < 50%)",
+      responses: [
+        { 
+          name: "Lucas Oliveira", 
+          comment: "Tempero muito forte, deixa a batata salgada demais",
+          preferredSample: "B",
+          credibilityScore: 88,
+          sentiment: "negative"
+        },
+        { 
+          name: "Fernanda Rocha", 
+          comment: "Sabor interessante mas não combina com batata",
+          preferredSample: "B",
+          credibilityScore: 85,
+          sentiment: "neutral"
+        },
+        { 
+          name: "Bruno Alves", 
+          comment: "Muito tempero, mascarou o sabor da batata",
+          preferredSample: "B",
+          credibilityScore: 92,
+          sentiment: "negative"
+        },
+        { 
+          name: "Mariana Santos", 
+          comment: "Gostei do tempero, mais saboroso que o normal",
+          preferredSample: "A",
+          credibilityScore: 80,
+          sentiment: "positive"
+        },
+        { 
+          name: "Gabriel Costa", 
+          comment: "Tempero diferente, mas prefiro o tradicional",
+          preferredSample: "B",
+          credibilityScore: 78,
+          sentiment: "neutral"
+        },
+        { 
+          name: "Juliana Lima", 
+          comment: "Muito artificial, não tem gosto natural",
+          preferredSample: "B",
+          credibilityScore: 86,
+          sentiment: "negative"
+        }
+      ]
+    },
+    {
+      id: "TEST004",
+      date: "2025-11-05", 
+      supplier: "FornecedorD",
+      input: "Farinha Especial", 
+      product: "Pão de Forma",
+      status: "approved",
+      type: "Aceitação",
+      evaluators: 20,
+      averageScore: 8.2,
+      statisticalDecision: "Aprovado (média > 6.0)",
+      responses: [
+        { 
+          name: "Roberto Silva", 
+          comment: "Textura macia, sabor suave e agradável",
+          score: 8.5,
+          credibilityScore: 85,
+          sentiment: "positive"
+        },
+        { 
+          name: "Patricia Costa", 
+          comment: "Pão bem fofinho, fica bom pro café da manhã",
+          score: 8.0,
+          credibilityScore: 82,
+          sentiment: "positive"
+        },
+        { 
+          name: "Carlos Mendes", 
+          comment: "Gosto normal, nada demais mas não é ruim",
+          score: 7.0,
+          credibilityScore: 70,
+          sentiment: "neutral"
+        }
+      ]
     }
   ]
 };
@@ -149,6 +319,52 @@ function App() {
     return texts[status] || 'Desconhecido';
   };
 
+  const analyzeCommentQuality = (comment) => {
+    const lowercaseComment = comment.toLowerCase();
+    
+    // Palavras que indicam comentário específico e técnico
+    const specificWords = ['dourada', 'rosada', 'escura', 'clara', 'cru', 'tonalidade', 'coloração', 'intensa', 'evidente', 'óbvia'];
+    const generalWords = ['sutil', 'diferença', 'parecidas', 'semelhante', 'levemente', 'mais', 'menos'];
+    const vaguenWords = ['não notei', 'não percebi', 'muito parecidas', 'imperceptível', 'não evidenciado'];
+    
+    // Contar palavras específicas
+    const specificCount = specificWords.filter(word => lowercaseComment.includes(word)).length;
+    const generalCount = generalWords.filter(word => lowercaseComment.includes(word)).length;
+    const vagueCount = vaguenWords.filter(word => lowercaseComment.includes(word)).length;
+    
+    if (specificCount >= 2 || lowercaseComment.includes('óbvia') || lowercaseComment.includes('evidente')) {
+      return 'specific';
+    } else if (specificCount >= 1 || generalCount >= 2) {
+      return 'general';
+    } else if (vagueCount >= 1 || lowercaseComment.includes('não')) {
+      return 'vague';
+    } else {
+      return 'basic';
+    }
+  };
+
+  const calculateCredibilityScore = (identified, comment) => {
+    // Base: 50 pontos por identificação correta, 0 por incorreta
+    let baseScore = identified ? 50 : 0;
+    
+    // Analisar qualidade do comentário automaticamente
+    const commentQuality = analyzeCommentQuality(comment);
+    
+    // Adicionar pontos pela qualidade do comentário (0-50 pontos)
+    let commentScore = 0;
+    if (commentQuality === 'specific') {
+      commentScore = 50; // Comentário específico e técnico
+    } else if (commentQuality === 'general') {
+      commentScore = 30; // Comentário geral mas relevante
+    } else if (commentQuality === 'vague') {
+      commentScore = 15; // Comentário vago
+    } else {
+      commentScore = 5; // Comentário muito básico
+    }
+    
+    return Math.min(100, baseScore + commentScore);
+  };
+
   const getCredibilityLevel = (score) => {
     if (score >= 80) return { level: 'Alta', class: 'credibility-high' };
     if (score >= 50) return { level: 'Média', class: 'credibility-medium' };
@@ -173,6 +389,367 @@ function App() {
     return icons[sentiment];
   };
 
+  const classifyApprovalReasons = (responses, testType, testStatus) => {
+    // Classificar motivos específicos de aprovação/reprovação
+    const reasons = {
+      approval: {
+        sensory: [],
+        technical: [],
+        preference: []
+      },
+      rejection: {
+        sensory: [],
+        technical: [], 
+        preference: []
+      }
+    };
+
+    const approvalKeywords = {
+      sensory: ['saboroso', 'crocante', 'macio', 'agradável', 'equilibrado', 'natural', 'fofinho'],
+      technical: ['identificação', 'correto', 'perceptível', 'evidente', 'óbvia', 'clara'],
+      preference: ['gostei', 'prefiro', 'melhor', 'compraria', 'recomendo']
+    };
+
+    const rejectionKeywords = {
+      sensory: ['sem graça', 'artificial', 'forte demais', 'salgado demais', 'doce demais', 'mascarou', 'enjoativo'],
+      technical: ['imperceptível', 'não consegui', 'não evidenciado', 'não notei', 'difícil'],
+      preference: ['não gostei', 'prefiro o tradicional', 'não combina', 'não compraria']
+    };
+
+    responses.forEach(response => {
+      const comment = response.comment.toLowerCase();
+      
+      // Classificar motivos de aprovação
+      Object.keys(approvalKeywords).forEach(category => {
+        approvalKeywords[category].forEach(keyword => {
+          if (comment.includes(keyword)) {
+            if (!reasons.approval[category].includes(keyword)) {
+              reasons.approval[category].push(keyword);
+            }
+          }
+        });
+      });
+
+      // Classificar motivos de rejeição
+      Object.keys(rejectionKeywords).forEach(category => {
+        rejectionKeywords[category].forEach(keyword => {
+          if (comment.includes(keyword)) {
+            if (!reasons.rejection[category].includes(keyword)) {
+              reasons.rejection[category].push(keyword);
+            }
+          }
+        });
+      });
+    });
+
+    return reasons;
+  };
+
+  const analyzeComments = (responses, testType, testStatus) => {
+    // Análise de sentimentos e temas dos comentários
+    const sentimentCounts = { positive: 0, negative: 0, neutral: 0 };
+    const themes = {};
+    const keywords = {
+      texture: ['textura', 'crocante', 'macio', 'fofinho', 'consistência'],
+      flavor: ['sabor', 'gosto', 'doce', 'salgado', 'tempero', 'artificial'],
+      color: ['cor', 'coloração', 'dourada', 'escura', 'rosada', 'tonalidade', 'intensa'],
+      preference: ['prefiro', 'gostei', 'não gostei', 'melhor', 'pior', 'tradicional'],
+      quality: ['qualidade', 'natural', 'bom', 'ruim', 'tradicional', 'óbvia', 'perceptível'],
+      difficulty: ['imperceptível', 'difícil', 'sutil', 'evidente', 'fácil', 'óbvio']
+    };
+
+    // Contar sentimentos e identificar temas
+    responses.forEach(response => {
+      sentimentCounts[response.sentiment]++;
+      
+      // Análise temática
+      Object.keys(keywords).forEach(theme => {
+        keywords[theme].forEach(keyword => {
+          if (response.comment.toLowerCase().includes(keyword)) {
+            if (!themes[theme]) themes[theme] = 0;
+            themes[theme]++;
+          }
+        });
+      });
+    });
+
+    // Classificar motivos específicos
+    const reasonsClassification = classifyApprovalReasons(responses, testType, testStatus);
+    
+    // Gerar insights baseados no tipo de teste e comentários
+    const insights = [];
+    
+    // Adicionar insights sobre classificação de motivos
+    if (testStatus === 'approved') {
+      if (reasonsClassification.approval.sensory.length > 0) {
+        insights.push({
+          category: "Aprovação",
+          attribute: "Atributos Sensoriais",
+          description: `Motivos sensoriais: ${reasonsClassification.approval.sensory.join(', ')}`,
+          frequency: reasonsClassification.approval.sensory.length,
+          sentiment: 0.7,
+          class: "insight-positive"
+        });
+      }
+      if (reasonsClassification.approval.technical.length > 0) {
+        insights.push({
+          category: "Aprovação",
+          attribute: "Aspectos Técnicos", 
+          description: `Indicadores técnicos: ${reasonsClassification.approval.technical.join(', ')}`,
+          frequency: reasonsClassification.approval.technical.length,
+          sentiment: 0.6,
+          class: "insight-positive"
+        });
+      }
+    } else {
+      if (reasonsClassification.rejection.sensory.length > 0) {
+        insights.push({
+          category: "Reprovação",
+          attribute: "Problemas Sensoriais",
+          description: `Motivos sensoriais: ${reasonsClassification.rejection.sensory.join(', ')}`,
+          frequency: reasonsClassification.rejection.sensory.length,
+          sentiment: -0.7,
+          class: "insight-negative"
+        });
+      }
+      if (reasonsClassification.rejection.technical.length > 0) {
+        insights.push({
+          category: "Reprovação",
+          attribute: "Problemas Técnicos",
+          description: `Dificuldades técnicas: ${reasonsClassification.rejection.technical.join(', ')}`,
+          frequency: reasonsClassification.rejection.technical.length,
+          sentiment: -0.5,
+          class: "insight-negative"
+        });
+      }
+    }
+    
+    if (testType === 'Triangular') {
+      // Análise para testes triangulares
+      const correctIdentifications = responses.filter(r => r.identified).length;
+      const totalEvaluators = responses.length;
+      
+      if (themes.color > 0) {
+        insights.push({
+          category: "Atributo Principal",
+          attribute: "Cor",
+          description: `${themes.color} avaliadores mencionaram diferenças de cor como principal indicador`,
+          frequency: themes.color,
+          sentiment: testStatus === 'approved' ? 0.5 : -0.3,
+          class: testStatus === 'approved' ? "insight-neutral" : "insight-negative"
+        });
+      }
+      
+      if (correctIdentifications / totalEvaluators > 0.7) {
+        insights.push({
+          category: "Eficácia",
+          attribute: "Identificação",
+          description: `Alta taxa de identificação (${Math.round(correctIdentifications/totalEvaluators*100)}%) indica diferença perceptível`,
+          frequency: correctIdentifications,
+          sentiment: 0.8,
+          class: "insight-positive"
+        });
+      }
+    }
+    
+    if (testType === 'Aceitação') {
+      // Análise para testes de aceitação
+      if (sentimentCounts.positive > sentimentCounts.negative) {
+        insights.push({
+          category: "Aceitação",
+          attribute: "Satisfação Geral",
+          description: `${sentimentCounts.positive} comentários positivos vs ${sentimentCounts.negative} negativos`,
+          frequency: sentimentCounts.positive,
+          sentiment: 0.7,
+          class: "insight-positive"
+        });
+      }
+      
+      if (themes.flavor > 0) {
+        const flavorSentiment = testStatus === 'approved' ? 0.6 : -0.4;
+        insights.push({
+          category: "Atributo",
+          attribute: "Sabor",
+          description: `${themes.flavor} avaliadores comentaram especificamente sobre sabor`,
+          frequency: themes.flavor,
+          sentiment: flavorSentiment,
+          class: testStatus === 'approved' ? "insight-positive" : "insight-negative"
+        });
+      }
+      
+      if (themes.texture > 0) {
+        insights.push({
+          category: "Atributo",
+          attribute: "Textura",
+          description: `${themes.texture} menções sobre textura do produto`,
+          frequency: themes.texture,
+          sentiment: testStatus === 'approved' ? 0.5 : -0.2,
+          class: testStatus === 'approved' ? "insight-positive" : "insight-neutral"
+        });
+      }
+    }
+    
+    if (testType === 'Preferência') {
+      // Análise para testes de preferência
+      const negativeReasons = responses.filter(r => r.sentiment === 'negative').length;
+      
+      if (themes.flavor > themes.texture) {
+        insights.push({
+          category: "Motivo Principal",
+          attribute: "Sabor",
+          description: `Sabor foi o principal motivo de rejeição mencionado`,
+          frequency: themes.flavor,
+          sentiment: -0.7,
+          class: "insight-negative"
+        });
+      }
+      
+      if (negativeReasons > responses.length / 2) {
+        insights.push({
+          category: "Rejeição",
+          attribute: "Preferência",
+          description: `Maioria dos comentários (${negativeReasons}) expressa preferência pelo padrão`,
+          frequency: negativeReasons,
+          sentiment: -0.6,
+          class: "insight-negative"
+        });
+      }
+    }
+    
+    // Insights sobre credibilidade dos avaliadores
+    const highCredibilityCount = responses.filter(r => r.credibilityScore >= 80).length;
+    if (highCredibilityCount > responses.length * 0.6) {
+      insights.push({
+        category: "Confiabilidade",
+        attribute: "Credibilidade",
+        description: `${highCredibilityCount} avaliadores com alta credibilidade (>80%)`,
+        frequency: highCredibilityCount,
+        sentiment: 0.8,
+        class: "insight-positive"
+      });
+    }
+    
+    return insights;
+  };
+
+  const generateAutomaticInsights = (responses, testType, testStatus, reasonsClassification) => {
+    const automaticInsights = [];
+    
+    // Análise de padrões nos comentários
+    const totalComments = responses.length;
+    const positiveComments = responses.filter(r => r.sentiment === 'positive').length;
+    const negativeComments = responses.filter(r => r.sentiment === 'negative').length;
+    const highCredibilityComments = responses.filter(r => r.credibilityScore >= 80).length;
+    
+    // Insight 1: Padrão de credibilidade
+    if (highCredibilityComments / totalComments > 0.7) {
+      automaticInsights.push({
+        type: "Confiabilidade",
+        title: "Alta Confiabilidade dos Avaliadores",
+        description: `${Math.round(highCredibilityComments/totalComments*100)}% dos avaliadores possuem alta credibilidade (>80%), aumentando a confiança nos resultados.`,
+        impact: "Alta",
+        actionable: "Manter programa de treinamento atual"
+      });
+    }
+    
+    // Insight 2: Consenso dos avaliadores
+    const consensusRate = testType === 'Triangular' 
+      ? responses.filter(r => r.identified).length / totalComments
+      : positiveComments / totalComments;
+    
+    if (consensusRate > 0.8) {
+      automaticInsights.push({
+        type: "Consenso",
+        title: "Alto Consenso Entre Avaliadores",
+        description: `${Math.round(consensusRate*100)}% dos avaliadores concordaram, indicando resultado consistente.`,
+        impact: "Alta",
+        actionable: "Resultado altamente confiável para tomada de decisão"
+      });
+    } else if (consensusRate < 0.5) {
+      automaticInsights.push({
+        type: "Divergência",
+        title: "Divergência Entre Avaliadores",
+        description: `Apenas ${Math.round(consensusRate*100)}% de consenso, pode indicar variabilidade no produto ou necessidade de treinamento.`,
+        impact: "Média",
+        actionable: "Revisar protocolo de teste e treinamento de avaliadores"
+      });
+    }
+    
+    // Insight 3: Análise de motivos específicos
+    const totalApprovalReasons = Object.values(reasonsClassification.approval).flat().length;
+    const totalRejectionReasons = Object.values(reasonsClassification.rejection).flat().length;
+    
+    if (totalApprovalReasons > totalRejectionReasons && testStatus === 'approved') {
+      automaticInsights.push({
+        type: "Validação",
+        title: "Motivos de Aprovação Bem Definidos", 
+        description: `Identificados ${totalApprovalReasons} motivos específicos de aprovação nos comentários, validando a decisão estatística.`,
+        impact: "Alta",
+        actionable: "Comunicar pontos fortes ao fornecedor"
+      });
+    }
+    
+    if (totalRejectionReasons > 2 && testStatus === 'rejected') {
+      automaticInsights.push({
+        type: "Oportunidade",
+        title: "Múltiplos Pontos de Melhoria Identificados",
+        description: `${totalRejectionReasons} aspectos específicos precisam ser melhorados conforme feedback dos avaliadores.`,
+        impact: "Alta", 
+        actionable: "Priorizar melhorias baseadas nos motivos mais frequentes"
+      });
+    }
+    
+    // Insight 4: Tendências por tipo de teste
+    if (testType === 'Preferência' && negativeComments > positiveComments) {
+      automaticInsights.push({
+        type: "Preferência",
+        title: "Resistência à Mudança",
+        description: "Avaliadores demonstram preferência pelo produto padrão, indicando necessidade de ajustes na nova formulação.",
+        impact: "Alta",
+        actionable: "Reduzir intensidade das mudanças ou melhorar comunicação dos benefícios"
+      });
+    }
+    
+    return automaticInsights;
+  };
+
+  const generateFeedback = (testType, testStatus, insights) => {
+    const feedback = [];
+    
+    if (testStatus === 'approved') {
+      if (testType === 'Aceitação') {
+        feedback.push("Produto atende aos critérios de aceitação do consumidor");
+        feedback.push("Manter padrão atual de produção");
+      } else if (testType === 'Triangular') {
+        feedback.push("Diferenças detectadas são aceitáveis para o processo");
+        feedback.push("Monitorar consistência em próximos lotes");
+      }
+    } else {
+      if (testType === 'Preferência') {
+        feedback.push("Reformular produto baseado nos comentários negativos");
+        feedback.push("Focar na melhoria dos atributos mais criticados");
+      }
+      
+      // Feedback específico baseado nos insights
+      insights.forEach(insight => {
+        if (insight.sentiment < -0.3) {
+          if (insight.attribute === 'Sabor') {
+            feedback.push("Reavaliar formulação para melhorar perfil de sabor");
+          } else if (insight.attribute === 'Textura') {
+            feedback.push("Ajustar processo para otimizar textura");
+          } else if (insight.attribute === 'Cor') {
+            feedback.push("Considerar ajustes na coloração do produto");
+          }
+        }
+      });
+    }
+    
+    // Feedback sobre avaliadores
+    feedback.push("Continuar treinamento de avaliadores para manter alta credibilidade");
+    
+    return feedback;
+  };
+
   const simulateAIAnalysis = async () => {
     setIsAnalyzing(true);
     setProgress(0);
@@ -190,46 +767,40 @@ function App() {
 
     // Simular tempo de análise
     setTimeout(() => {
+      // Gerar insights baseados nos comentários reais
+      const insights = analyzeComments(selectedTest.responses, selectedTest.type, selectedTest.status);
+      const reasonsClassification = classifyApprovalReasons(selectedTest.responses, selectedTest.type, selectedTest.status);
+      const automaticInsights = generateAutomaticInsights(selectedTest.responses, selectedTest.type, selectedTest.status, reasonsClassification);
+      const feedback = generateFeedback(selectedTest.type, selectedTest.status, insights);
+      
+      // Gerar resumo baseado no tipo de teste
+      let summary = "";
+      if (selectedTest.type === 'Triangular') {
+        const correctIds = selectedTest.responses.filter(r => r.identified).length;
+        summary = `Análise triangular: ${correctIds}/${selectedTest.responses.length} avaliadores (${selectedTest.accuracy}%) identificaram corretamente a amostra diferente. ${selectedTest.statisticalDecision}.`;
+      } else if (selectedTest.type === 'Aceitação') {
+        summary = `Teste de aceitação com média de ${selectedTest.averageScore} pontos. ${selectedTest.statisticalDecision}. Análise de ${selectedTest.responses.length} comentários revela padrões de aceitação.`;
+      } else if (selectedTest.type === 'Preferência') {
+        const preferredA = selectedTest.responses.filter(r => r.preferredSample === 'A').length;
+        const preferredB = selectedTest.responses.filter(r => r.preferredSample === 'B').length;
+        summary = `Teste de preferência: ${preferredA} escolheram amostra A, ${preferredB} escolheram amostra B. ${selectedTest.statisticalDecision}.`;
+      }
+      
       setAnalysisResults({
-        summary: "Análise triangular detectou diferenças significativas na cor da massa. 83% dos avaliadores identificaram corretamente a amostra diferente.",
-        insights: [
-          {
-            category: "Positivo",
-            attribute: "Identificação",
-            description: "Maioria dos avaliadores conseguiu identificar a diferença",
-            frequency: 15,
-            sentiment: 0.7,
-            class: "insight-positive"
-          },
-          {
-            category: "Neutro", 
-            attribute: "Cor",
-            description: "Diferenças sutis na coloração da massa foram detectadas",
-            frequency: 12,
-            sentiment: 0.0,
-            class: "insight-neutral"
-          },
-          {
-            category: "Negativo",
-            attribute: "Percepção",
-            description: "Alguns avaliadores relataram dificuldade na identificação",
-            frequency: 3,
-            sentiment: -0.3,
-            class: "insight-negative"
-          }
-        ],
+        summary,
+        insights,
+        reasonsClassification,
+        automaticInsights,
         recommendation: {
-          decision: "Aprovado",
+          decision: selectedTest.status === 'approved' ? 'Aprovado' : 'Reprovado',
           confidence: 85,
-          icon: <CheckCircle className="icon-lg" />,
-          class: "recommendation-approved",
-          reasoning: "Apesar das diferenças detectadas, elas são sutis e não comprometem a qualidade do produto."
+          icon: selectedTest.status === 'approved' ? <CheckCircle className="icon-lg" /> : <XCircle className="icon-lg" />,
+          class: selectedTest.status === 'approved' ? "recommendation-approved" : "recommendation-rejected",
+          reasoning: selectedTest.status === 'approved' 
+            ? "Análise dos comentários confirma a decisão estatística de aprovação."
+            : "Análise dos comentários explica os motivos da reprovação estatística."
         },
-        feedback: [
-          "Manter padrão de cor atual do corante",
-          "Considerar treinamento adicional para avaliadores com baixa precisão",
-          "Monitorar consistência em próximos lotes"
-        ]
+        feedback
       });
       setIsAnalyzing(false);
       setProgress(0);
@@ -491,6 +1062,61 @@ function App() {
                   </div>
                 </div>
 
+                {/* Classificação de Motivos */}
+                {analysisResults.reasonsClassification && (
+                  <div className="section-card">
+                    <h2 className="section-heading">
+                      <BarChart className="icon-md" />
+                      Classificação de Motivos
+                    </h2>
+                    <div className="reasons-grid">
+                      <div className="reasons-column">
+                        <h3 className="reasons-title approval">Motivos de Aprovação</h3>
+                        {Object.entries(analysisResults.reasonsClassification.approval).map(([category, reasons]) => (
+                          reasons.length > 0 && (
+                            <div key={category} className="reason-category">
+                              <h4 className="category-title">{
+                                category === 'sensory' ? 'Sensoriais' :
+                                category === 'technical' ? 'Técnicos' : 'Preferência'
+                              }</h4>
+                              <ul className="reason-list">
+                                {reasons.map((reason, index) => (
+                                  <li key={index} className="reason-item approval">{reason}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )
+                        ))}
+                        {Object.values(analysisResults.reasonsClassification.approval).every(arr => arr.length === 0) && (
+                          <p className="no-reasons">Nenhum motivo específico de aprovação identificado</p>
+                        )}
+                      </div>
+                      
+                      <div className="reasons-column">
+                        <h3 className="reasons-title rejection">Motivos de Reprovação</h3>
+                        {Object.entries(analysisResults.reasonsClassification.rejection).map(([category, reasons]) => (
+                          reasons.length > 0 && (
+                            <div key={category} className="reason-category">
+                              <h4 className="category-title">{
+                                category === 'sensory' ? 'Sensoriais' :
+                                category === 'technical' ? 'Técnicos' : 'Preferência'
+                              }</h4>
+                              <ul className="reason-list">
+                                {reasons.map((reason, index) => (
+                                  <li key={index} className="reason-item rejection">{reason}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )
+                        ))}
+                        {Object.values(analysisResults.reasonsClassification.rejection).every(arr => arr.length === 0) && (
+                          <p className="no-reasons">Nenhum motivo específico de reprovação identificado</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Insights Identificados */}
                 <div className="section-card">
                   <h2 className="section-heading">
@@ -547,6 +1173,34 @@ function App() {
                     </div>
                   </div>
                 </div>
+
+                {/* Insights Automáticos */}
+                {analysisResults.automaticInsights && analysisResults.automaticInsights.length > 0 && (
+                  <div className="section-card">
+                    <h2 className="section-heading">
+                      <Brain className="icon-md" />
+                      Insights Automáticos da IA
+                    </h2>
+                    <div className="automatic-insights-grid">
+                      {analysisResults.automaticInsights.map((insight, index) => (
+                        <div key={index} className={`automatic-insight-card impact-${insight.impact.toLowerCase()}`}>
+                          <div className="insight-header-auto">
+                            <span className="insight-type">{insight.type}</span>
+                            <span className={`impact-badge impact-${insight.impact.toLowerCase()}`}>
+                              {insight.impact === 'Alta' ? '🔥' : insight.impact === 'Média' ? '⚠️' : '💡'} 
+                              {insight.impact}
+                            </span>
+                          </div>
+                          <h3 className="insight-title-auto">{insight.title}</h3>
+                          <p className="insight-description-auto">{insight.description}</p>
+                          <div className="insight-actionable">
+                            <strong>Ação recomendada:</strong> {insight.actionable}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Feedback para Fornecedor */}
                 <div className="section-card">
